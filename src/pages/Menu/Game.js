@@ -82,6 +82,7 @@ export default function Game({ navigation, route }) {
         pesan: '',
     })
 
+    const [next, setnext] = useState(0);
 
     const readText = async (text, tipe) => {
 
@@ -94,9 +95,10 @@ export default function Game({ navigation, route }) {
                 KEY_PARAM_STREAM: 'STREAM_MUSIC',
             },
         });
-        Tts.addEventListener('tts-finish', (event) => {
-            SoundPlayer.stop();
-        });
+        // Tts.addEventListener('tts-finish', (event) => {
+        //     SoundPlayer.stop();
+        //     setnext(1);
+        // });
     };
 
     const sendData = () => {
@@ -110,53 +112,89 @@ export default function Game({ navigation, route }) {
 
 
             if (kirim.tipe == 'PILOT') {
-                SoundPlayer.playSoundFile('tung', 'mp3')
+                SoundPlayer.playSoundFile('tung', 'mp3');
                 setTimeout(() => {
                     SoundPlayer.playSoundFile('noise', 'mp3')
                     SoundPlayer.setVolume(0.5);
                     setPilot(kirim.pesan);
                     readText(kirim.pesan, 'PILOT');
 
+                    Tts.addEventListener('tts-finish', (event) => {
+
+                        axios.post(apiURL + 'pesan', kirim).then(res => {
+
+                            SoundPlayer.playSoundFile('tung', 'mp3')
+
+                            setTimeout(() => {
+                                SoundPlayer.playSoundFile('noise', 'mp3')
+                                SoundPlayer.setVolume(0.5);
+                                setAtc(res.data.message);
+                                setPosisi(res.data.posisi);
+                                readText(res.data.message, 'ATC');
+                                Tts.removeAllListeners('tts-finish');
+                                Tts.addEventListener('tts-finish', (event) => {
+                                    SoundPlayer.stop();
+                                })
+
+                            }, 1000)
+
+
+
+                        })
+
+
+                    });
+
+
+
                 }, 1000)
 
-                setTimeout(() => {
-                    axios.post(apiURL + 'pesan', kirim).then(res => {
-                        console.log(res.data);
-                        SoundPlayer.playSoundFile('tung', 'mp3')
-                        setTimeout(() => {
-                            SoundPlayer.playSoundFile('noise', 'mp3')
-                            SoundPlayer.setVolume(0.5);
-                            setAtc(res.data.message);
-                            setPosisi(res.data.posisi);
-                            readText(res.data.message, 'ATC')
-                        }, 1000)
 
-                    })
-                }, 2000)
+
+
+
+
+
+
+
 
             } else {
-                SoundPlayer.playSoundFile('tung', 'mp3')
+                SoundPlayer.playSoundFile('tung', 'mp3');
                 setTimeout(() => {
                     SoundPlayer.playSoundFile('noise', 'mp3')
                     SoundPlayer.setVolume(0.5);
-                    setAtc(kirim.pesan)
-                    readText(kirim.pesan, 'ATC')
+                    setAtc(kirim.pesan);
+                    readText(kirim.pesan, 'ATC');
+
+                    Tts.addEventListener('tts-finish', (event) => {
+
+                        axios.post(apiURL + 'pesan', kirim).then(res => {
+
+                            SoundPlayer.playSoundFile('tung', 'mp3')
+
+                            setTimeout(() => {
+                                SoundPlayer.playSoundFile('noise', 'mp3')
+                                SoundPlayer.setVolume(0.5);
+                                setPilot(res.data.message);
+                                setPosisi(res.data.posisi);
+                                readText(res.data.message, 'PILOT');
+                                Tts.removeAllListeners('tts-finish');
+                                Tts.addEventListener('tts-finish', (event) => {
+                                    SoundPlayer.stop();
+                                })
+
+                            }, 1000)
+
+
+
+                        })
+
+
+                    });
+
+
+
                 }, 1000)
-
-                setTimeout(() => {
-                    axios.post(apiURL + 'pesan', kirim).then(res => {
-                        console.log(res.data);
-                        SoundPlayer.playSoundFile('tung', 'mp3')
-                        setTimeout(() => {
-                            SoundPlayer.playSoundFile('noise', 'mp3')
-                            SoundPlayer.setVolume(0.5);
-                            setPilot(res.data.message);
-                            setPosisi(res.data.posisi);
-                            readText(res.data.message, 'PILOT')
-                        }, 1000)
-
-                    })
-                }, 2000)
             }
 
 
@@ -279,7 +317,7 @@ export default function Game({ navigation, route }) {
                             resizeMode: 'contain'
                         }} />
                     </TouchableOpacity>
-
+                    <Text>{next}</Text>
 
                 </View>
                 <View style={{
