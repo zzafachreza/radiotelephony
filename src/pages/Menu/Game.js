@@ -68,10 +68,13 @@ export default function Game({ navigation, route }) {
 
     // 'Good Morning Citilink QG Nine Seven Seven'
     // 'Citilink QG Nine Seven Seven, Go Ahead'
+    const [pilot, setPilot] = useState('');
+    const [atc, setAtc] = useState('');
+    const [posisi, setPosisi] = useState('');
     const [pesan, setPesan] = useState({
         posisi: '',
-        pilot: '',
-        atc: '',
+        pilot: pilot,
+        atc: atc,
     });
 
     const [kirim, setKirim] = useState({
@@ -103,34 +106,60 @@ export default function Game({ navigation, route }) {
             Alert.alert(MYAPP, 'Pesan tidak boleh kosong')
         } else {
 
+
+
+
             if (kirim.tipe == 'PILOT') {
                 SoundPlayer.playSoundFile('tung', 'mp3')
                 setTimeout(() => {
                     SoundPlayer.playSoundFile('noise', 'mp3')
-                    setPesan({
-                        ...pesan,
-                        pilot: kirim.pesan,
-                        atc: '',
-                    });
-                    readText(kirim.pesan, 'PILOT')
+                    SoundPlayer.setVolume(0.5);
+                    setPilot(kirim.pesan);
+                    readText(kirim.pesan, 'PILOT');
+
                 }, 1000)
+
+                setTimeout(() => {
+                    axios.post(apiURL + 'pesan', kirim).then(res => {
+                        console.log(res.data);
+                        SoundPlayer.playSoundFile('tung', 'mp3')
+                        setTimeout(() => {
+                            SoundPlayer.playSoundFile('noise', 'mp3')
+                            SoundPlayer.setVolume(0.5);
+                            setAtc(res.data.message);
+                            setPosisi(res.data.posisi);
+                            readText(res.data.message, 'ATC')
+                        }, 1000)
+
+                    })
+                }, 2000)
 
             } else {
                 SoundPlayer.playSoundFile('tung', 'mp3')
                 setTimeout(() => {
                     SoundPlayer.playSoundFile('noise', 'mp3')
-                    setPesan({
-                        ...pesan,
-                        atc: kirim.pesan
-                    })
+                    SoundPlayer.setVolume(0.5);
+                    setAtc(kirim.pesan)
                     readText(kirim.pesan, 'ATC')
                 }, 1000)
+
+                setTimeout(() => {
+                    axios.post(apiURL + 'pesan', kirim).then(res => {
+                        console.log(res.data);
+                        SoundPlayer.playSoundFile('tung', 'mp3')
+                        setTimeout(() => {
+                            SoundPlayer.playSoundFile('noise', 'mp3')
+                            SoundPlayer.setVolume(0.5);
+                            setPilot(res.data.message);
+                            setPosisi(res.data.posisi);
+                            readText(res.data.message, 'PILOT')
+                        }, 1000)
+
+                    })
+                }, 2000)
             }
 
-            setKirim({
-                tipe: '',
-                pesan: ''
-            })
+
 
         }
     }
@@ -148,7 +177,7 @@ export default function Game({ navigation, route }) {
                 padding: 16,
             }}>
 
-                {pesan.pilot.length > 0 &&
+                {pilot.length > 0 &&
                     <View style={{
                         width: '80%',
                         padding: 10,
@@ -162,12 +191,12 @@ export default function Game({ navigation, route }) {
                         <Text style={{
                             color: colors.white,
                             ...fonts.body3
-                        }}>{pesan.pilot}</Text>
+                        }}>{pilot}</Text>
                     </View>
                 }
 
 
-                {pesan.atc.length > 0 &&
+                {atc.length > 0 &&
                     <View style={{
                         marginTop: '10%',
                         alignSelf: 'flex-end',
@@ -183,14 +212,14 @@ export default function Game({ navigation, route }) {
                         <Text style={{
                             color: colors.black,
                             ...fonts.body3
-                        }}>{pesan.atc}</Text>
+                        }}>{atc}</Text>
                     </View>
                 }
             </View>
 
-            {pesan.posisi.length > 0 &&
+            {posisi.length > 0 &&
                 <Image source={{
-                    uri: pesan.posisi
+                    uri: posisi
                 }} style={{
                     width: windowWidth,
                     height: 250,
@@ -205,7 +234,7 @@ export default function Game({ navigation, route }) {
                 <View style={{
                     flexDirection: 'row'
                 }}>
-                    <View style={{
+                    {/* <View style={{
                         flex: 1,
                         paddingRight: 10,
                     }}>
@@ -213,7 +242,7 @@ export default function Game({ navigation, route }) {
                             ...pesan,
                             posisi: x
                         })} label="Position" data={data} iconname="list" />
-                    </View>
+                    </View> */}
 
                     <TouchableOpacity onPress={() => {
                         setKirim({
