@@ -84,6 +84,8 @@ export default function Game({ navigation, route }) {
 
     const [next, setnext] = useState(0);
 
+    const [chat, setChat] = useState([])
+
     const readText = async (text, tipe) => {
 
         Tts.setDefaultRate(0.5);
@@ -103,7 +105,7 @@ export default function Game({ navigation, route }) {
 
     const sendData = () => {
         if (kirim.tipe.length == 0) {
-            Alert.alert(MYAPP, 'Silahkan pilih PILOT atau ATC')
+            Alert.alert(MYAPP, 'Silahkan pilih AMC atau ATC')
         } else if (kirim.pesan.length == 0) {
             Alert.alert(MYAPP, 'Pesan tidak boleh kosong')
         } else {
@@ -119,21 +121,44 @@ export default function Game({ navigation, route }) {
                     setPilot(kirim.pesan);
                     readText(kirim.pesan, 'PILOT');
 
+
+
                     Tts.addEventListener('tts-finish', (event) => {
 
                         axios.post(apiURL + 'pesan', kirim).then(res => {
 
-                            SoundPlayer.playSoundFile('tung', 'mp3')
+
+
+
+                            SoundPlayer.playSoundFile('tung', 'mp3');
+                            let cth = [...chat];
+                            cth.push({
+                                posisi: res.data.posisi,
+                                pilot: kirim.pesan,
+                                atc: res.data.message,
+                            });
+                            setChat(cth);
 
                             setTimeout(() => {
-                                SoundPlayer.playSoundFile('noise', 'mp3')
-                                SoundPlayer.setVolume(0.5);
+
+
                                 setAtc(res.data.message);
                                 setPosisi(res.data.posisi);
                                 readText(res.data.message, 'ATC');
-                                Tts.removeAllListeners('tts-finish');
-                                Tts.addEventListener('tts-finish', (event) => {
-                                    SoundPlayer.stop();
+
+                                if (res.data.message.length > 0) {
+                                    SoundPlayer.playSoundFile('noise', 'mp3')
+                                    SoundPlayer.setVolume(0.5);
+
+                                    Tts.removeAllListeners('tts-finish');
+                                    Tts.addEventListener('tts-finish', (event) => {
+                                        SoundPlayer.stop();
+                                    })
+
+                                }
+                                setKirim({
+                                    ...kirim,
+                                    pesan: ''
                                 })
 
                             }, 1000)
@@ -172,16 +197,36 @@ export default function Game({ navigation, route }) {
 
                             SoundPlayer.playSoundFile('tung', 'mp3')
 
+                            let cth = [...chat];
+                            cth.push({
+                                posisi: res.data.posisi,
+                                atc: kirim.pesan,
+                                pilot: res.data.message,
+                            });
+                            setChat(cth);
+
                             setTimeout(() => {
-                                SoundPlayer.playSoundFile('noise', 'mp3')
-                                SoundPlayer.setVolume(0.5);
+
+
+
                                 setPilot(res.data.message);
                                 setPosisi(res.data.posisi);
                                 readText(res.data.message, 'PILOT');
-                                Tts.removeAllListeners('tts-finish');
-                                Tts.addEventListener('tts-finish', (event) => {
-                                    SoundPlayer.stop();
-                                })
+
+
+                                if (res.data.message.length > 0) {
+                                    SoundPlayer.playSoundFile('noise', 'mp3')
+                                    SoundPlayer.setVolume(0.5);
+
+                                    Tts.removeAllListeners('tts-finish');
+                                    Tts.addEventListener('tts-finish', (event) => {
+                                        SoundPlayer.stop();
+                                    })
+                                    setKirim({
+                                        ...kirim,
+                                        pesan: ''
+                                    })
+                                }
 
                             }, 1000)
 
@@ -215,44 +260,53 @@ export default function Game({ navigation, route }) {
                 padding: 16,
             }}>
 
-                {pilot.length > 0 &&
-                    <View style={{
-                        width: '80%',
-                        padding: 10,
-                        borderRadius: 10,
-                        backgroundColor: colors.primary,
-                    }}>
-                        <Text style={{
-                            color: colors.white,
-                            ...fonts.headline2
-                        }}>PILOT</Text>
-                        <Text style={{
-                            color: colors.white,
-                            ...fonts.body3
-                        }}>{pilot}</Text>
-                    </View>
-                }
+
+                <FlatList data={chat} renderItem={({ item, index }) => {
+                    return (
+                        <View style={{
+                            marginBottom: 10,
+                        }}>
+                            <View style={{
+                                width: '80%',
+                                padding: 10,
+                                borderRadius: 10,
+                                backgroundColor: colors.primary,
+                            }}>
+                                <Text style={{
+                                    color: colors.white,
+                                    ...fonts.headline2
+                                }}>AMC</Text>
+                                <Text style={{
+                                    color: colors.white,
+                                    ...fonts.body3
+                                }}>{item.pilot}</Text>
+                            </View>
 
 
-                {atc.length > 0 &&
-                    <View style={{
-                        marginTop: '10%',
-                        alignSelf: 'flex-end',
-                        width: '80%',
-                        padding: 10,
-                        borderRadius: 10,
-                        backgroundColor: colors.secondary,
-                    }}>
-                        <Text style={{
-                            color: colors.black,
-                            ...fonts.headline2
-                        }}>ATC</Text>
-                        <Text style={{
-                            color: colors.black,
-                            ...fonts.body3
-                        }}>{atc}</Text>
-                    </View>
-                }
+
+
+                            <View style={{
+                                marginTop: '10%',
+                                alignSelf: 'flex-end',
+                                width: '80%',
+                                padding: 10,
+                                borderRadius: 10,
+                                backgroundColor: colors.secondary,
+                            }}>
+                                <Text style={{
+                                    color: colors.black,
+                                    ...fonts.headline2
+                                }}>ATC</Text>
+                                <Text style={{
+                                    color: colors.black,
+                                    ...fonts.body3
+                                }}>{item.atc}</Text>
+                            </View>
+                        </View>
+                    )
+
+                }} />
+
             </View>
 
             {posisi.length > 0 &&
@@ -317,7 +371,37 @@ export default function Game({ navigation, route }) {
                             resizeMode: 'contain'
                         }} />
                     </TouchableOpacity>
-                    <Text>{next}</Text>
+
+                    <TouchableOpacity onPress={() => {
+                        Alert.alert(MYAPP, 'Apakah kamu yakin akan hapus semua percakapan ?', [
+                            { text: 'tidak' }, {
+                                text: 'YA',
+                                onPress: () => {
+                                    console.log(chat)
+                                    setChat([]);
+                                    setKirim({
+                                        ...kirim,
+                                        posisi: ''
+                                    });
+                                    setPosisi('')
+                                }
+                            }
+                        ])
+                    }} style={{
+                        borderWidth: 1,
+                        borderRadius: 10,
+                        // marginHorizontal: 10,
+                        borderColor: colors.secondary,
+                        backgroundColor: colors.primary,
+                    }}>
+                        <Image source={require('../../assets/clear.png')} style={{
+                            width: 80,
+                            height: 80,
+                            resizeMode: 'contain'
+                        }} />
+                    </TouchableOpacity>
+
+
 
                 </View>
                 <View style={{
