@@ -143,7 +143,7 @@ export default function Game({ navigation, route }) {
 
 
                                 setAtc(res.data.message);
-                                setPosisi(res.data.posisi);
+                                setPosisi(res.data.message.length == 0 ? res.data.posisi : '');
                                 readText(res.data.message, 'ATC');
 
                                 if (res.data.message.length > 0) {
@@ -285,23 +285,26 @@ export default function Game({ navigation, route }) {
 
 
 
-                            <View style={{
-                                marginTop: '10%',
-                                alignSelf: 'flex-end',
-                                width: '80%',
-                                padding: 10,
-                                borderRadius: 10,
-                                backgroundColor: colors.secondary,
-                            }}>
-                                <Text style={{
-                                    color: colors.black,
-                                    ...fonts.headline2
-                                }}>ATC</Text>
-                                <Text style={{
-                                    color: colors.black,
-                                    ...fonts.body3
-                                }}>{item.atc}</Text>
-                            </View>
+                            {item.atc.length > 0 &&
+
+                                <View style={{
+                                    marginTop: '10%',
+                                    alignSelf: 'flex-end',
+                                    width: '80%',
+                                    padding: 10,
+                                    borderRadius: 10,
+                                    backgroundColor: colors.secondary,
+                                }}>
+                                    <Text style={{
+                                        color: colors.black,
+                                        ...fonts.headline2
+                                    }}>ATC</Text>
+                                    <Text style={{
+                                        color: colors.black,
+                                        ...fonts.body3
+                                    }}>{item.atc}</Text>
+                                </View>
+                            }
                         </View>
                     )
 
@@ -310,12 +313,17 @@ export default function Game({ navigation, route }) {
             </View>
 
             {posisi.length > 0 &&
-                <Image source={{
-                    uri: posisi
-                }} style={{
-                    width: windowWidth,
-                    height: 250,
-                }} />
+                <>
+                    <Image source={{
+                        uri: posisi
+                    }} style={{
+                        width: windowWidth,
+                        height: 250,
+                    }} />
+                    <Text style={{
+                        color: colors.white
+                    }}></Text>
+                </>
             }
 
             <View style={{
