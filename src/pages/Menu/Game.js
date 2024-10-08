@@ -223,7 +223,7 @@ export default function Game({ navigation, route }) {
                                         SoundPlayer.stop();
                                     })
                                     setKirim({
-                                        ...kirim,
+                                        tipe: '',
                                         pesan: ''
                                     })
                                 }
